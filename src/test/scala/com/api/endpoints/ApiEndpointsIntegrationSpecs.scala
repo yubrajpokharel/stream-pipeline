@@ -1,7 +1,7 @@
 package com.api.endpoints
 
 import java.util
-import java.util.Properties
+import java.util.{Collections, Properties}
 
 import eventstream.events.BaseEvent
 import kafka.admin.AdminUtils
@@ -95,6 +95,36 @@ class ApiEndpointsIntegrationSpecs extends FunSuite with SpringTestContextManage
 
     response.andExpect(status().isOk)
       .andExpect(jsonPath("$.status").value("Success"))
+  }
+
+  test("is able to ingest concurrent requests to the eventstream") {
+
+    val requests = Range(0, 100).map( identifier => {
+        s"""
+        {
+          "eventType" : "SomeEventForIngestion",
+          "someField1"  : "someValue-${identifier}"
+        }
+      """.stripMargin.replaceAll("\\+s", "")
+      }).toList
+
+    requests.map(json => {mockMvc.perform(post("/ingest").content(json)).andDo(print())})
+      .foreach(x=> x.andExpect(status().isOk))
+
+    //then
+    val nativeKafkaConsumer = new KafkaConsumer[String, String](new Properties() {{
+      put("bootstrap.servers", "localhost:9092") //streaming.config
+      put("group.id", "consumer_group_test")
+      put("auto.offset.reset", "earliest")
+      put("key.deserializer", classOf[StringDeserializer].getName)
+      put("value.deserializer", classOf[StringDeserializer].getName)
+    }})
+
+    nativeKafkaConsumer.subscribe(Collections.singletonList("EventStream"))
+
+    val events = nativeKafkaConsumer.poll(1000)
+
+    assert(events.count() == 100)
   }
 }
 
