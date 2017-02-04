@@ -1,5 +1,8 @@
 package com.api.domain;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * Created by prayagupd
  * on 1/29/17.
@@ -7,25 +10,13 @@ package com.api.domain;
 
 public class HealthStatus {
 
-    private final long id;
-    private final String eventId;
-    private final String status;
+    @Getter @Setter private final String eventId;
+    @Getter @Setter private final String responseCode;
+    @Getter @Setter private final String responseMessage;
 
-    public HealthStatus(long id, String eventId, String content) {
-        this.id = id;
+    public HealthStatus(String eventId, String responseCode, String responseMessage) {
         this.eventId = eventId;
-        this.status = content;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public String getEventId() {
-        return eventId;
+        this.responseCode = responseCode;
+        this.responseMessage = responseMessage;
     }
 }

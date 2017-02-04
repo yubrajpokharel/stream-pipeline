@@ -15,9 +15,9 @@ import java.util.Set;
  */
 
 @Component
-public class EventFinder {
+public class EventDetective {
 
-    private Logger logger = LogManager.getLogger(EventFinder.class);
+    private Logger logger = LogManager.getLogger(EventDetective.class);
 
     //TODO inject from properties
     public String EVENTS_PACKAGE = "com.api.events";

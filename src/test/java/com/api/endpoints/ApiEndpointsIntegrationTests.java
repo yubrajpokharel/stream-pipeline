@@ -31,6 +31,6 @@ public class ApiEndpointsIntegrationTests {
 
         this.mockMvc.perform(get("/health")).andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("I'm Running"));
+                .andExpect(jsonPath("$.responseCode").value("I'm Running"));
     }
 }

@@ -7,9 +7,9 @@ import org.scalatest.FunSuite
   * Created by prayagupd
   * on 2/1/17.
   */
-class EventFinderSpecs extends FunSuite {
+class EventDetectiveSpecs extends FunSuite {
 
-  val toEvent = new EventFinder()
+  val toEvent = new EventDetective()
 
   test("returns the eventType") {
     toEvent.EVENTS_PACKAGE = "com.api.endpoints"

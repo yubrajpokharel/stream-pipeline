@@ -49,8 +49,12 @@ curl -H "Content-Type: application/json" -X POST -d '{"eventType" : "TestIngesti
 
 ```
 
-Eventstream
------------
+JSON schema validation 
+------------------------
+
+
+write to the Eventstream
+------------------------
 
 ```bash
 /usr/local/kafka_2.11-0.10.1.1/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic "EventStream" --from-beginning

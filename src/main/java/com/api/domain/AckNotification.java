@@ -10,10 +10,12 @@ import lombok.Setter;
 
 public class AckNotification {
     @Getter @Setter private String eventId;
-    @Getter @Setter private String status;
+    @Getter @Setter private String responseCode;
+    @Getter @Setter private String responseMessage;
 
-    public AckNotification(String eventId, String status) {
+    public AckNotification(String eventId, String responseCode, String desc) {
         this.eventId = eventId;
-        this.status = status;
+        this.responseCode = responseCode;
+        this.responseMessage = desc;
     }
 }

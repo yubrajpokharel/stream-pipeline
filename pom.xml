@@ -52,6 +52,12 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>com.github.fge</groupId>
+			<artifactId>json-schema-validator</artifactId>
+			<version>2.2.6</version>
+		</dependency>
+
 		<!-- tests -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -91,12 +97,11 @@
 			<version>0.9.10</version>
 		</dependency>
 
-		<!--<dependency>-->
-			<!--<groupId>org.apache.zookeeper</groupId>-->
-			<!--<artifactId>zookeeper</artifactId>-->
-			<!--<version>3.4.8</version>-->
-			<!--<scope>test</scope>-->
-		<!--</dependency>-->
+		<dependency>
+			<groupId>org.codehaus.sonar</groupId>
+			<artifactId>sonar-maven-plugin</artifactId>
+			<version>5.1</version>
+		</dependency>
 
 		<dependency>
 			<groupId>net.manub</groupId>
@@ -143,12 +148,12 @@
 	<repositories>
 
 		<repository>
-			<id>spring-releases</id>
+			<responseMessage>spring-releases</responseMessage>
 			<url>https://repo.spring.io/libs-release</url>
 		</repository>
 
 		<repository>
-			<id>mvnrepository</id>
+			<responseMessage>mvnrepository</responseMessage>
 			<name>mvnrepository</name>
 			<url>http://www.mvnrepository.com</url>
 		</repository>
@@ -157,7 +162,7 @@
 
 	<pluginRepositories>
 		<pluginRepository>
-			<id>spring-releases</id>
+			<responseMessage>spring-releases</responseMessage>
 			<url>https://repo.spring.io/libs-release</url>
 		</pluginRepository>
 	</pluginRepositories>

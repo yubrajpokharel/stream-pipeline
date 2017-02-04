@@ -3,8 +3,14 @@ package com.api.endpoints;
 import com.api.domain.AckNotification;
 import com.api.domain.HealthStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jackson.JsonLoader;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import eventstream.events.BaseEvent;
+import eventstream.events.JsonEvent;
 import eventstream.producer.generic.GenericEventProducer;
+import lombok.val;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
@@ -15,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,14 +38,12 @@ public class ApiEndpoints {
     //FIXME read the stream name from config??
     private GenericEventProducer eventProducer = new GenericEventProducer("EventStream");
 
-    private final AtomicLong counter = new AtomicLong();
-
     @Autowired
-    EventFinder eventFinder;
+    EventDetective eventDetective;
 
     @RequestMapping("/health")
     public HealthStatus health() {
-        return new HealthStatus(counter.incrementAndGet(), "some value", "I'm Running");
+        return new HealthStatus(UUID.randomUUID().toString(), "API-001", "Green");
     }
 
     @RequestMapping(value = "/ingest", method = RequestMethod.POST)
@@ -49,24 +52,29 @@ public class ApiEndpoints {
         //TODO create a LogService
         logger.info(payload);
 
-        JSONObject jsonPayload = new JSONObject(payload);
-
-        ObjectMapper objectMapper = new ObjectMapper();
         try {
-            BaseEvent event = objectMapper.readValue(payload,
-                    eventFinder.eventType(jsonPayload.getString("eventType")).get());
-            event.setCreatedTime(new Date());
-            BaseEvent publishedEvent = eventProducer.publish(event);
-            System.out.println(publishedEvent.toJSON(publishedEvent));
-            return new AckNotification(UUID.randomUUID().toString(), "Success");
-        } catch (IOException e) {
-            //FIXME exception handling
-            e.printStackTrace();
+            ObjectMapper objectMapper = new ObjectMapper();
+            final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+            final JsonSchema schema = factory.getJsonSchema(JsonLoader.fromResource("/schema/" +
+                    new JSONObject(payload).getString("eventType") + ".json"));
+            val validation = schema.validate(objectMapper.readTree(payload));
+            if (validation.isSuccess()) {
+                BaseEvent event = new JsonEvent(payload);
+                BaseEvent publishedEvent = eventProducer.publish(event);
+                logger.debug(publishedEvent.toJSON(publishedEvent));
+                return new AckNotification(UUID.randomUUID().toString(), "API-002", "");
+            } else {
+                return new AckNotification(UUID.randomUUID().toString(), "API-004", "Bad request.");
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
             e.printStackTrace();
+        } catch (ProcessingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return new AckNotification(UUID.randomUUID().toString(), "Failed");
+        return new AckNotification(UUID.randomUUID().toString(), "API-005", "Server failed.");
     }
 }
