@@ -1,8 +1,10 @@
 package com.api.endpoints
 
 import java.util
+import java.util.function.Function
 import java.util.{Collections, Properties}
 
+import eventstream.producer.generic.GenericEventProducer
 import kafka.admin.AdminUtils
 import kafka.utils.ZkUtils
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
@@ -12,10 +14,10 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.json.JSONObject
 import org.junit.runner.RunWith
 import org.scalatest.{FunSuite, Matchers}
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.{Autowired, Value}
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.{Configuration, Profile}
+import org.springframework.context.annotation.{Bean, Configuration, Profile, PropertySource}
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.{get, post}
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
@@ -30,6 +32,7 @@ import scala.collection.JavaConverters._
   */
 
 @RunWith(classOf[SpringRunner])
+//@ContextConfiguration(classes = Array(classOf[TestConfiguration]))
 @SpringBootTest
 @AutoConfigureMockMvc
 class PayloadIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestContextManagement with Matchers {
@@ -56,26 +59,30 @@ class PayloadIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTest
       .andExpect(jsonPath("$.responseCode").value("API-001"))
   }
 
-  test("valildates the incoming payload with the defined schema, and responds with bad request(API-004) on failure") {
+  test("validates the incoming payload with the defined schema, and responds with bad request(API-004) on failure") {
     val json =
       """
                 {
-                  "eventType" : "TestIngestionEvent",
+                  "MessageHeader" :{
+                     "EventName" : "TestIngestionEvent"
+                  },
                   "someField2"  : "someValue"
                 }
       """.stripMargin
 
     val response: ResultActions = mockMvc.perform(post("/ingest").content(json)).andDo(print())
 
-    response.andExpect(status().is(200))
+    response.andExpect(status().is(400))
       .andExpect(jsonPath("$.responseCode").value("API-004"))
   }
 
-  test("accepts the JSON payload and publishes to eventstream and responds with success message") {
+  test("accepts the JSON payload, matches against the schema and publishes to eventstream and responds with success message") {
     val json =
       """
         {
-          "eventType" : "TestIngestionEvent",
+          "MessageHeader" : {
+              "EventName" : "TestIngestionEvent"
+           },
           "someField1"  : "someValue"
         }
       """.stripMargin.replaceAll("\\+s", "")
@@ -134,7 +141,9 @@ class PayloadIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTest
     val requests = Range(0, 100).map(identifier => {
       s"""
         {
-          "eventType" : "TestIngestionEvent",
+          "MessageHeader" :{
+             "EventName" : "TestIngestionEvent"
+          },
           "someField1"  : "someValue-${identifier}"
         }
       """.stripMargin.replaceAll("\\+s", "")
@@ -151,8 +160,24 @@ class PayloadIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTest
   }
 }
 
+//FIXME add controller as bean
 @Configuration
+@PropertySource(Array("application.properties"))
 @Profile(Array("test"))
 class TestConfiguration {
 
+  @Value("${eventstream.name}")
+  val eventStreamName: String = null
+
+  @Bean
+  def eventProducer: GenericEventProducer = new GenericEventProducer(eventStreamName)
+
+  @Bean
+  def schemaEventType: Function[String, String] = {
+    new Function[String, String] {
+      override def apply(t: String): String = {
+        new JSONObject(t).getString("eventType")
+      }
+    }
+  }
 }

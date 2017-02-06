@@ -1,6 +1,7 @@
 package com.api.endpoints;
 
 import com.api.domain.AckNotification;
+import com.api.domain.AckNotification.AckPayload;
 import com.api.domain.HealthStatus;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import eventstream.events.BaseEvent;
@@ -8,8 +9,8 @@ import eventstream.events.JsonEvent;
 import eventstream.producer.generic.GenericEventProducer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -54,9 +55,11 @@ public class PayloadIngestionEndpoints {
                 BaseEvent event = new JsonEvent(payload);
                 BaseEvent publishedEvent = eventProducer.publish(event);
                 logger.debug(publishedEvent.toJSON(publishedEvent));
-                return new AckNotification(UUID.randomUUID().toString(), "API-002", "");
+                return new AckNotification(new AckPayload(UUID.randomUUID().toString(), "API-002",
+                        "Payload accepted"), HttpStatus.OK);
             } else {
-                return new AckNotification(UUID.randomUUID().toString(), "API-004", "Bad request.");
+                return new AckNotification(new AckPayload(UUID.randomUUID().toString(), "API-004",
+                        "Validation failed"), HttpStatus.BAD_REQUEST);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -65,6 +68,7 @@ public class PayloadIngestionEndpoints {
         } catch (ProcessingException e) {
             e.printStackTrace();
         }
-        return new AckNotification(UUID.randomUUID().toString(), "API-005", "Server failed.");
+        return new AckNotification(new AckPayload(UUID.randomUUID().toString(), "API-005",
+                "API Server error"), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

@@ -5,10 +5,10 @@ eventstream pipeline
 
 ```
 |                   |                          |
-|                   |                          |
-|    endpoint       |      Eventstream driver  |   Eventstream
-|                   |                          |
-|                   |                          |
+|                   |                          |------------------------
+|    /endpoint      |      Eventstream driver  |   Eventstream         |
+|                   |                          |  |  |  |  |  |  |  |  |
+|                   |                          |------------------------
 |                   |                          |
 
 ```
@@ -45,7 +45,7 @@ Ingestion
 ```bash
 curl -H "Content-Type: application/json" -X POST -d '{"eventType" : "TestIngestionEvent", "someField1" : "someValue1"}' localhost:9000/ingest
 
-{"eventId":"3f95719a-8f6f-4d67-9ee6-36421895139c","responseCode":"API-002","responseMessage":""}
+{"eventId":"aef35bbc-17db-4e4d-bcbe-e6fbffc4150c","responseCode":"API-002","responseMessage":"Payload accepted"}
 
 ```
 
@@ -70,11 +70,15 @@ write to the Eventstream
 Note
 ----
 
-you need an event object `TestIngestionEvent` which extends `BaseEvent` in 
-`com.api.events` package
+add `createdTime` to event attribute. 
 
-Maybe I should just not map to a class, instead just add `createTime`
-event attribute. 
+That way its kind of endpoint for ingestion, with validation layer
 
-That way its kind of endpoint for ingestion, but I will have to add a
- validation layer.
+Define the eventType in the payload as below, based on your requirement.
+
+```java
+    @Bean
+    Function<String, String> schemaEventType() {
+        return payload -> new JSONObject(payload).getString("eventType");
+    }
+```

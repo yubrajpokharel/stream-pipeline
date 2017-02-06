@@ -15,7 +15,7 @@ import java.util.function.Function;
  */
 
 @SpringBootApplication
-public class RESTApplication {
+public class EventIngestionPipeline {
 
     @Value("${eventstream.name}")
     String eventStreamName;
@@ -27,10 +27,10 @@ public class RESTApplication {
 
     @Bean
     Function<String, String> schemaEventType() {
-        return payload -> new JSONObject(payload).getString("eventType");
+        return payload -> new JSONObject(payload).getJSONObject("MessageHeader").getString("EventName");
     }
 
     public static void main(String[] args) {
-        SpringApplication.run(RESTApplication.class, args);
+        SpringApplication.run(EventIngestionPipeline.class, args);
     }
 }
