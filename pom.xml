@@ -3,8 +3,8 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.prayagupd.api</groupId>
-	<artifactId>rest-api</artifactId>
+	<groupId>com.ingestion.pipeline</groupId>
+	<artifactId>ingestion-api</artifactId>
 	<version>0.1.0</version>
 	<packaging>war</packaging>
 
@@ -148,12 +148,12 @@
 	<repositories>
 
 		<repository>
-			<responseMessage>spring-releases</responseMessage>
+			<id>spring-releases</id>
 			<url>https://repo.spring.io/libs-release</url>
 		</repository>
 
 		<repository>
-			<responseMessage>mvnrepository</responseMessage>
+			<id>mvnrepository</id>
 			<name>mvnrepository</name>
 			<url>http://www.mvnrepository.com</url>
 		</repository>
@@ -162,7 +162,7 @@
 
 	<pluginRepositories>
 		<pluginRepository>
-			<responseMessage>spring-releases</responseMessage>
+			<id>spring-releases</id>
 			<url>https://repo.spring.io/libs-release</url>
 		</pluginRepository>
 	</pluginRepositories>

@@ -32,7 +32,7 @@ import scala.collection.JavaConverters._
 @RunWith(classOf[SpringRunner])
 @SpringBootTest
 @AutoConfigureMockMvc
-class ApiEndpointsIntegrationSpecs extends FunSuite with SpringTestContextManagement with Matchers {
+class PayloadIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestContextManagement with Matchers {
 
   @Autowired val mockMvc: MockMvc = null
 
@@ -55,7 +55,7 @@ class ApiEndpointsIntegrationSpecs extends FunSuite with SpringTestContextManage
       .andExpect(jsonPath("$.responseCode").value("API-001"))
   }
 
-  test("valildates the incoming payload with the defined schema, and responds with bad request on failure") {
+  test("valildates the incoming payload with the defined schema, and responds with bad request(API-004) on failure") {
     val json =
       """
                 {
@@ -115,6 +115,21 @@ class ApiEndpointsIntegrationSpecs extends FunSuite with SpringTestContextManage
 
   test("is able to ingest concurrent requests to the eventstream") {
 
+    val nativeKafkaConsumer = new KafkaConsumer[String, String](new Properties() {
+      {
+        put("bootstrap.servers", "localhost:9092") //streaming.config
+        put("group.id", "consumer_group_test_new")
+        put("client.id", "TestEventConsumer")
+        put("auto.offset.reset", "latest")
+        put("key.deserializer", classOf[StringDeserializer].getName)
+        put("value.deserializer", classOf[StringDeserializer].getName)
+      }
+    })
+
+    nativeKafkaConsumer.subscribe(Collections.singletonList("EventStream"))
+
+    assert(nativeKafkaConsumer.poll(1000).count() == 0)
+
     val requests = Range(0, 100).map(identifier => {
       s"""
         {
@@ -126,22 +141,9 @@ class ApiEndpointsIntegrationSpecs extends FunSuite with SpringTestContextManage
 
     requests.map(json => {
       mockMvc.perform(post("/ingest").content(json)).andDo(print())
-    })
-      .foreach(x => x.andExpect(status().isOk))
+    }).foreach(x => x.andExpect(status().isOk))
 
     //then
-    val nativeKafkaConsumer = new KafkaConsumer[String, String](new Properties() {
-      {
-        put("bootstrap.servers", "localhost:9092") //streaming.config
-        put("group.id", "consumer_group_test")
-        put("auto.offset.reset", "earliest")
-        put("key.deserializer", classOf[StringDeserializer].getName)
-        put("value.deserializer", classOf[StringDeserializer].getName)
-      }
-    })
-
-    nativeKafkaConsumer.subscribe(Collections.singletonList("EventStream"))
-
     val events = nativeKafkaConsumer.poll(1000)
 
     assert(events.count() == 100)

@@ -43,14 +43,18 @@ Ingestion
 ---------
 
 ```bash
-curl -H "Content-Type: application/json" -X POST -d '{"eventType" : "TestIngestionEvent", "field1" : "someValue2"}' localhost:9000/ingest
+curl -H "Content-Type: application/json" -X POST -d '{"eventType" : "TestIngestionEvent", "someField1" : "someValue1"}' localhost:9000/ingest
 
-{"eventId":"b2a3b9e1-8ad1-4d0e-b673-c10125445704","status":"Success"}
+{"eventId":"3f95719a-8f6f-4d67-9ee6-36421895139c","responseCode":"API-002","responseMessage":""}
 
 ```
 
 JSON schema validation 
 ------------------------
+
+```
+
+```
 
 
 write to the Eventstream
@@ -59,7 +63,7 @@ write to the Eventstream
 ```bash
 /usr/local/kafka_2.11-0.10.1.1/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic "EventStream" --from-beginning
 
-{"createdTime":1486065173552,"eventType":"TestIngestionEvent","field1":"someValue3"}
+{"createdTime":1486065173552,"eventType":"TestIngestionEvent","someField1":"someValue1"}
 
 ```
 
