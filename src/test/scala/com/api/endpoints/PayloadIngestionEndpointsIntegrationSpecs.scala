@@ -48,7 +48,8 @@ class PayloadIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTest
     EmbeddedKafka.stop()
   }
 
-  test("responseCode is Running") {
+  //http://stackoverflow.com/questions/29490113/kafka-get-broker-host-from-zookeeper
+  test("health responseCode is API-001, when Eventstream is Up") {
     val response: ResultActions = mockMvc.perform(get("/health")).andDo(print())
 
     response.andExpect(status().isOk)

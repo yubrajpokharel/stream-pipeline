@@ -1,5 +1,8 @@
 package com.api.endpoints
 
+import java.util.function.Function
+
+import org.json.JSONObject
 import org.scalatest.{FunSpec, FunSuite}
 
 /**
@@ -11,18 +14,22 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
 
   val schemaValidator = new JsonSchemaValidator
 
+  val eventTypeSchema = new Function[String, String] {
+    override def apply(payload: String): String = new JSONObject(payload).getString("eventType")
+  }
+
   describe("validates the JSON payload as success") {
     it("when there's no schema available") {
       val json =
         """
         {
-           "eventType" : "WhateverEvent",
+           "eventType" : "EventWithoutDefinedSchema",
            "someField1" : "SomeValue1",
            "someField2" : "SomeValue2"
         }
         """.stripMargin
 
-      assert(schemaValidator.isValidPayload(json))
+      assert(schemaValidator.isValidPayload(json, eventTypeSchema))
 
     }
 
@@ -35,7 +42,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(schemaValidator.isValidPayload(json))
+      assert(schemaValidator.isValidPayload(json, eventTypeSchema))
 
     }
 
@@ -49,7 +56,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(schemaValidator.isValidPayload(json))
+      assert(schemaValidator.isValidPayload(json, eventTypeSchema))
 
     }
 
@@ -64,7 +71,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(schemaValidator.isValidPayload(json))
+      assert(schemaValidator.isValidPayload(json, eventTypeSchema))
 
     }
 
@@ -78,7 +85,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(schemaValidator.isValidPayload(json))
+      assert(schemaValidator.isValidPayload(json, eventTypeSchema))
 
     }
   }
@@ -93,7 +100,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(!schemaValidator.isValidPayload(json))
+      assert(!schemaValidator.isValidPayload(json, eventTypeSchema))
 
     }
 
@@ -106,7 +113,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(!schemaValidator.isValidPayload(json))
+      assert(!schemaValidator.isValidPayload(json, eventTypeSchema))
 
     }
 
@@ -119,7 +126,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(!schemaValidator.isValidPayload(json))
+      assert(!schemaValidator.isValidPayload(json, eventTypeSchema))
 
     }
   }

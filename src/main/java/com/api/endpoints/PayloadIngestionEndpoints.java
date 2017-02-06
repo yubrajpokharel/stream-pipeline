@@ -8,8 +8,8 @@ import eventstream.events.JsonEvent;
 import eventstream.producer.generic.GenericEventProducer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -49,7 +49,7 @@ public class PayloadIngestionEndpoints {
         logger.info("payload={}", payload);
 
         try {
-            if (jsonSchemaValidator.isValidPayload(payload)) {
+            if (jsonSchemaValidator.isValidPayload(payload, p -> new JSONObject(p).getString("eventType"))) {
                 BaseEvent event = new JsonEvent(payload);
                 BaseEvent publishedEvent = eventProducer.publish(event);
                 logger.debug(publishedEvent.toJSON(publishedEvent));
