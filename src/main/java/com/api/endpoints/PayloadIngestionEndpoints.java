@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 
 /**
  * Created by prayagupd
@@ -34,6 +35,9 @@ public class PayloadIngestionEndpoints {
     @Autowired
     JsonSchemaValidator jsonSchemaValidator;
 
+    @Autowired
+    Function<String, String> schemaEventType;
+
     @RequestMapping("/health")
     public HealthStatus health() {
         return new HealthStatus(UUID.randomUUID().toString(), "API-001", "Green");
@@ -46,7 +50,7 @@ public class PayloadIngestionEndpoints {
         logger.info("payload={}", payload);
 
         try {
-            if (jsonSchemaValidator.isValidPayload(payload, p -> new JSONObject(p).getString("eventType"))) {
+            if (jsonSchemaValidator.isValidPayload(payload, schemaEventType)) {
                 BaseEvent event = new JsonEvent(payload);
                 BaseEvent publishedEvent = eventProducer.publish(event);
                 logger.debug(publishedEvent.toJSON(publishedEvent));

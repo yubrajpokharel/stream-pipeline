@@ -114,7 +114,7 @@ class PayloadIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTest
       .andExpect(jsonPath("$.responseCode").value("API-002"))
   }
 
-  test("is able to ingest concurrent requests to the eventstream") {
+  ignore("is able to ingest concurrent requests to the eventstream") {
 
     val nativeKafkaConsumer = new KafkaConsumer[String, String](new Properties() {
       {

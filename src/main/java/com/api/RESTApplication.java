@@ -1,10 +1,13 @@
 package com.api;
 
 import eventstream.producer.generic.GenericEventProducer;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+
+import java.util.function.Function;
 
 /**
  * Created by prayagupd
@@ -20,6 +23,11 @@ public class RESTApplication {
     @Bean
     GenericEventProducer eventProducer() {
         return new GenericEventProducer(eventStreamName);
+    }
+
+    @Bean
+    Function<String, String> schemaEventType() {
+        return payload -> new JSONObject(payload).getString("eventType");
     }
 
     public static void main(String[] args) {
