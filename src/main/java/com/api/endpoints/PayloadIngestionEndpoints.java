@@ -32,9 +32,6 @@ public class PayloadIngestionEndpoints {
     GenericEventProducer eventProducer;
 
     @Autowired
-    EventDetective eventDetective;
-
-    @Autowired
     JsonSchemaValidator jsonSchemaValidator;
 
     @RequestMapping("/health")
