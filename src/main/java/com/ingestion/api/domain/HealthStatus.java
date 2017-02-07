@@ -1,4 +1,4 @@
-package com.api.domain;
+package com.ingestion.api.domain;
 
 import lombok.Getter;
 import lombok.Setter;

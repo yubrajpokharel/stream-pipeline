@@ -1,4 +1,4 @@
-package com.api.endpoints;
+package com.ingestion.api.endpoints;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jackson.JsonLoader;

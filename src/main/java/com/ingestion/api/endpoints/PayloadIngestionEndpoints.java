@@ -1,11 +1,11 @@
-package com.api.endpoints;
+package com.ingestion.api.endpoints;
 
-import com.api.domain.AckNotification;
-import com.api.domain.AckNotification.AckPayload;
-import com.api.domain.HealthStatus;
+import com.ingestion.api.domain.AckNotification;
+import com.ingestion.api.domain.HealthStatus;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import eventstream.events.BaseEvent;
 import eventstream.events.JsonEvent;
+import eventstream.producer.fails.EventStreamProducerException;
 import eventstream.producer.generic.GenericEventProducer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
 /**
@@ -55,20 +54,17 @@ public class PayloadIngestionEndpoints {
                 BaseEvent event = new JsonEvent(payload);
                 BaseEvent publishedEvent = eventProducer.publish(event);
                 logger.debug(publishedEvent.toJSON(publishedEvent));
-                return new AckNotification(new AckPayload(UUID.randomUUID().toString(), "API-002",
+                return new AckNotification(new AckNotification.AckPayload(UUID.randomUUID().toString(), "API-002",
                         "Payload accepted"), HttpStatus.OK);
             } else {
-                return new AckNotification(new AckPayload(UUID.randomUUID().toString(), "API-004",
+                return new AckNotification(new AckNotification.AckPayload(UUID.randomUUID().toString(), "API-004",
                         "Validation failed"), HttpStatus.BAD_REQUEST);
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (ProcessingException e) {
-            e.printStackTrace();
+        } catch (ProcessingException | EventStreamProducerException e) {
+            logger.error(e);
+            //TODO test respond with failure
+            return new AckNotification(new AckNotification.AckPayload(UUID.randomUUID().toString(), "API-005",
+                    "API Server error"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new AckNotification(new AckPayload(UUID.randomUUID().toString(), "API-005",
-                "API Server error"), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

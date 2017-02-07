@@ -1,4 +1,4 @@
-package com.api.endpoints
+package com.ingestion.api.endpoints
 
 import java.util.function.Function
 

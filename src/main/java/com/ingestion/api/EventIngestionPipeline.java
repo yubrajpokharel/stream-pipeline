@@ -1,4 +1,4 @@
-package com.api;
+package com.ingestion.api;
 
 import eventstream.producer.generic.GenericEventProducer;
 import org.json.JSONObject;

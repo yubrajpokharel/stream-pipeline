@@ -1,4 +1,4 @@
-package com.api.events;
+package com.ingestion.api.events;
 
 import eventstream.events.BaseEvent;
 import lombok.Getter;
