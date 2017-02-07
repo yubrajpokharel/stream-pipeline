@@ -10,9 +10,9 @@ import lombok.Setter;
 
 public class HealthStatus {
 
-    @Getter @Setter private final String eventId;
-    @Getter @Setter private final String responseCode;
-    @Getter @Setter private final String responseMessage;
+    @Getter @Setter private String eventId;
+    @Getter @Setter private String responseCode;
+    @Getter @Setter private String responseMessage;
 
     public HealthStatus(String eventId, String responseCode, String responseMessage) {
         this.eventId = eventId;
