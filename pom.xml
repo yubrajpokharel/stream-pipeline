@@ -49,8 +49,14 @@
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-			<version>1.4.4.RELEASE</version>
+			<version>${spring.version}</version>
 		</dependency>
 
 		<dependency>
@@ -63,7 +69,7 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
-			<version>1.4.4.RELEASE</version>
+			<version>1.5.1.RELEASE</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -136,6 +142,7 @@
 
 	<properties>
 		<java.version>1.8</java.version>
+		<spring.version>1.5.1.RELEASE</spring.version>
 	</properties>
 
 
@@ -145,7 +152,7 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>1.4.4.RELEASE</version>
+				<version>${spring.version}</version>
 			</plugin>
 
 			<plugin>
