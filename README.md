@@ -2,17 +2,7 @@
 eventstream pipeline
 =========================
 
-
-```
-|                   |                          |
-|                   |                          |------------------------
-|    /endpoint      |      Eventstream driver  |   Eventstream         |
-|                   |                          |  |  |  |  |  |  |  |  |
-|                   |                          |------------------------
-|                   |                          |
-
-```
-
+![](EventPipeline.png)
 
 tests
 -----
@@ -23,6 +13,13 @@ mvn test
 
 run-app
 -------
+
+```
+mvn clean package
+
+```
+
+or 
 
 ```
 $ mvn spring-boot:run
@@ -43,9 +40,9 @@ Ingestion
 ---------
 
 ```bash
-curl -H "Content-Type: application/json" -X POST -d '{"eventType" : "TestIngestionEvent", "someField1" : "someValue1"}' localhost:9000/ingestion-api/ingest
+curl -H "Content-Type: application/json" -X POST -d '{"MessageHeader" : { "EventId" : "some-uniq-id", "EventName" : "TestIngestionEvent"}, "someField1" : "someValue1"}' localhost:9000/ingestion-api/ingest
 
-{"eventId":"aef35bbc-17db-4e4d-bcbe-e6fbffc4150c","responseCode":"API-002","responseMessage":"Payload accepted"}
+{"eventId":"some-uniq-id","responseCode":"API-002","responseMessage":"Payload accepted"}
 
 ```
 
@@ -59,19 +56,24 @@ Put the schema to validate in `resources/schema/EventName.json`
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-    "eventType": {
-      "type": "string"
+    "MessageHeader": {
+      "type": "object",
+      "properties": {
+        "EventName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "EventName"
+      ]
     },
-    "requiredField1": {
-      "type": "string"
-    },
-    "notRequiredField1": {
+    "someField1": {
       "type": "string"
     }
   },
   "required": [
-    "eventType",
-    "requiredField1"
+    "MessageHeader",
+    "someField1"
   ]
 }
 ```

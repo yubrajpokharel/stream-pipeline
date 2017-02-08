@@ -88,7 +88,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
 
     }
 
-    it("even when the payload has undefined fields(because JSON as schemaless :) )") {
+    it("even when the payload has undefined fields(because JSON is schemaless :) )") {
       val json =
         """
         {

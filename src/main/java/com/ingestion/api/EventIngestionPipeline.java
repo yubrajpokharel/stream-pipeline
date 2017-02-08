@@ -2,6 +2,7 @@ package com.ingestion.api;
 
 import eventstream.producer.generic.GenericEventProducer;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -26,8 +27,15 @@ public class EventIngestionPipeline {
     }
 
     @Bean
-    Function<String, String> schemaEventType() {
+    @Qualifier("schemaEventTypeLamda")
+    Function<String, String> schemaEventTypeLamda() {
         return payload -> new JSONObject(payload).getJSONObject("MessageHeader").getString("EventName");
+    }
+
+    @Bean
+    @Qualifier("eventIdLambda")
+    Function<String, String> eventIdLamda() {
+        return payload -> new JSONObject(payload).getJSONObject("MessageHeader").getString("EventId");
     }
 
     public static void main(String[] args) {

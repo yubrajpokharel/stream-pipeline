@@ -59,12 +59,13 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
       .andExpect(jsonPath("$.responseCode").value("API-001"))
   }
 
-  test("validates the incoming payload with the defined schema, and responds with bad request(API-004) on failure") {
+  test("validates the incoming payload with the defined schema, and responds with bad request(API-004) on payload validation failure") {
     val json =
       """
                 {
                   "MessageHeader" :{
-                     "EventName" : "TestIngestionEvent"
+                     "EventName" : "TestIngestionEvent",
+                     "EventId" : "some-unique-id"
                   },
                   "someField2"  : "someValue"
                 }
@@ -73,14 +74,16 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
     val response: ResultActions = mockMvc.perform(post("/ingest").content(json)).andDo(print())
 
     response.andExpect(status().is(400))
+      .andExpect(jsonPath("$.eventId").value("some-unique-id"))
       .andExpect(jsonPath("$.responseCode").value("API-004"))
   }
 
-  test("accepts the JSON payload, matches against the schema and publishes to eventstream and responds with success message") {
+  test("accepts the JSON payload, matches against the schema and publishes to eventstream and then responds with success message") {
     val json =
       """
         {
           "MessageHeader" : {
+              "EventId" : "some-very-unique-id",
               "EventName" : "TestIngestionEvent"
            },
           "someField1"  : "someValue"
@@ -118,6 +121,7 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
     assert(events.count() == 1)
 
     response.andExpect(status().isOk)
+      .andExpect(jsonPath("$.eventId").value("some-very-unique-id"))
       .andExpect(jsonPath("$.responseCode").value("API-002"))
   }
 
@@ -157,6 +161,28 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
     val events = nativeKafkaConsumer.poll(1000)
 
     assert(events.count() == 100)
+  }
+
+  test("responds back 500 when could not write to the EventStream") {
+    EmbeddedKafka.stop()
+
+    val json =
+      """
+                {
+                  "MessageHeader" :{
+                     "EventName" : "TestIngestionEvent",
+                     "EventId" : "some-really-unique-id"
+                  },
+                  "someField1"  : "someValue"
+                }
+      """.stripMargin
+
+    val response: ResultActions = mockMvc.perform(post("/ingest").content(json)).andDo(print())
+
+    response.andExpect(status().is(500))
+      .andExpect(jsonPath("$.eventId").value("some-really-unique-id"))
+      .andExpect(jsonPath("$.responseCode").value("API-005"))
+
   }
 }
 

@@ -11,6 +11,7 @@ import eventstream.producer.generic.GenericEventProducer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,7 +38,12 @@ public class EventIngestionEndpoints {
     JsonSchemaValidator jsonSchemaValidator;
 
     @Autowired
-    Function<String, String> schemaEventType;
+    @Qualifier("schemaEventTypeLamda")
+    Function<String, String> schemaEventTypeLamda;
+
+    @Autowired
+    @Qualifier("eventIdLambda")
+    Function<String, String> eventIdLambda;
 
     @RequestMapping("/health")
     public HealthStatus health() {
@@ -51,20 +57,19 @@ public class EventIngestionEndpoints {
         logger.info("payload={}", payload);
 
         try {
-            if (jsonSchemaValidator.isValidPayload(payload, schemaEventType)) {
+            if (jsonSchemaValidator.isValidPayload(payload, schemaEventTypeLamda)) {
                 BaseEvent event = new JsonEvent(payload);
                 BaseEvent publishedEvent = eventProducer.publish(event);
                 logger.debug(publishedEvent.toJSON(publishedEvent));
-                return new AckNotification(new AckNotification.AckPayload(UUID.randomUUID().toString(), "API-002",
+                return new AckNotification(new AckNotification.AckPayload(eventIdLambda.apply(payload), "API-002",
                         "Payload accepted"), HttpStatus.OK);
             } else {
-                return new AckNotification(new AckNotification.AckPayload(UUID.randomUUID().toString(), "API-004",
+                return new AckNotification(new AckNotification.AckPayload(eventIdLambda.apply(payload), "API-004",
                         "Validation failed"), HttpStatus.BAD_REQUEST);
             }
         } catch (ProcessingException | EventStreamProducerException e) {
             logger.error(e);
-            //TODO test respond with failure
-            return new AckNotification(new AckNotification.AckPayload(UUID.randomUUID().toString(), "API-005",
+            return new AckNotification(new AckNotification.AckPayload(eventIdLambda.apply(payload), "API-005",
                     "API Server error"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
