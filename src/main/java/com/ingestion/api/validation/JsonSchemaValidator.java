@@ -1,4 +1,4 @@
-package com.ingestion.api.endpoints;
+package com.ingestion.api.validation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jackson.JsonLoader;
@@ -23,15 +23,17 @@ public class JsonSchemaValidator {
 
     private Logger logger = LogManager.getLogger(JsonSchemaValidator.class);
 
-    public boolean isValidPayload(String payload, Function<String, String> schemaSource) throws ProcessingException {
+    public boolean isValidPayload(String payload, Function<String, String> schemaSourceLamda)
+            throws ProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         final JsonSchemaFactory schemaFactory = JsonSchemaFactory.byDefault();
         try {
             final JsonSchema schema = schemaFactory.getJsonSchema(JsonLoader.fromResource("/schema/" +
-                     schemaSource.apply(payload) + ".json"));
+                     schemaSourceLamda.apply(payload) + ".json"));
             ProcessingReport validation = schema.validate(objectMapper.readTree(payload));
             validation.forEach(processingMessage ->
-                    logger.error(processingMessage.getMessage())
+                    logger.error(processingMessage.getMessage()) //TODO collect the errors and respond back, so that
+                    // the client know what exactly failed.
             );
             return validation.isSuccess();
         } catch (IOException e) {

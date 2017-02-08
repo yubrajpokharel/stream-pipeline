@@ -35,7 +35,7 @@ import scala.collection.JavaConverters._
 //@ContextConfiguration(classes = Array(classOf[TestConfiguration]))
 @SpringBootTest
 @AutoConfigureMockMvc
-class PayloadIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestContextManagement with Matchers {
+class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestContextManagement with Matchers {
 
   @Autowired val mockMvc: MockMvc = null
 

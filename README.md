@@ -80,13 +80,13 @@ Put the schema to validate in `resources/schema/EventName.json`
 append to the Eventstream
 -------------------------
 
-With this pipeline, erything goes into one eventstream, configured in 
+With this pipeline(one application), everything goes into one eventstream, configured in 
 `application.properties`
 
 ```bash
-/usr/local/kafka_2.11-0.10.1.1/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic "EventStream" --from-beginning
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic "EventStream" --from-beginning
 
-{"createdTime":1486065173552,"eventType":"TestIngestionEvent","someField1":"someValue1"}
+{"createdTime":1486065173552,"eventType":"TestIngestionEvent","requiredField1":"someValue1"}
 
 ```
 

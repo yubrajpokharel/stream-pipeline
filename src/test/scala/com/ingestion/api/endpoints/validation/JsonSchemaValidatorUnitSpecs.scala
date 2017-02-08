@@ -1,9 +1,10 @@
-package com.ingestion.api.endpoints
+package com.ingestion.api.endpoints.validation
 
 import java.util.function.Function
 
+import com.ingestion.api.validation.JsonSchemaValidator
 import org.json.JSONObject
-import org.scalatest.{FunSpec, FunSuite}
+import org.scalatest.FunSpec
 
 /**
   * Created by prayagupd
@@ -33,7 +34,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
 
     }
 
-    it("when the payload matches against schema") {
+    it("when the payload matches against schema with valid types") {
       val json =
         """
         {
@@ -44,6 +45,18 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
 
       assert(schemaValidator.isValidPayload(json, eventTypeSchema))
 
+    }
+
+    it("when payload has length as defined in schema") {
+      val json =
+        """
+        {
+           "eventType" : "IngestionEventWithMaxLength",
+          "requiredField1" : "Ifive"
+        }
+        """.stripMargin
+
+      assert(schemaValidator.isValidPayload(json, eventTypeSchema))
     }
 
     it("even when the payload have extra not_required fields") {
@@ -115,6 +128,18 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
 
       assert(!schemaValidator.isValidPayload(json, eventTypeSchema))
 
+    }
+
+    it("when payload has length more than defined") {
+      val json =
+        """
+        {
+           "eventType" : "IngestionEventWithMaxLength",
+          "requiredField1" : "I'mMoreThanLength5"
+        }
+        """.stripMargin
+
+      assert(!schemaValidator.isValidPayload(json, eventTypeSchema))
     }
 
     it("when the nested_property is present without required content") {

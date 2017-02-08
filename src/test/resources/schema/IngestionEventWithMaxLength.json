@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "eventType": {
+      "type": "string"
+    },
+    "requiredField1": {
+      "type": "string",
+      "maxLength" : 5
+    },
+    "notRequiredField1": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "eventType",
+    "requiredField1"
+  ]
+}

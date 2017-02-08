@@ -3,6 +3,7 @@ package com.ingestion.api.endpoints;
 import com.ingestion.api.domain.AckNotification;
 import com.ingestion.api.domain.HealthStatus;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.ingestion.api.validation.JsonSchemaValidator;
 import eventstream.events.BaseEvent;
 import eventstream.events.JsonEvent;
 import eventstream.producer.fails.EventStreamProducerException;
@@ -25,9 +26,9 @@ import java.util.function.Function;
  */
 
 @RestController
-public class PayloadIngestionEndpoints {
+public class EventIngestionEndpoints {
 
-    private Logger logger = LogManager.getLogger(PayloadIngestionEndpoints.class);
+    private Logger logger = LogManager.getLogger(EventIngestionEndpoints.class);
 
     @Autowired
     GenericEventProducer eventProducer;
