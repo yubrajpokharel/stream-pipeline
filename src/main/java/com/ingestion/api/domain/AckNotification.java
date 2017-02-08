@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
  * on 1/30/17.
  */
 
-public class AckNotification extends ResponseEntity {
+public class AckNotification extends ResponseEntity<AckNotification.AckPayload> {
 
     public AckNotification(AckPayload ackPayload, HttpStatus httpStatus) {
         super(ackPayload, httpStatus);

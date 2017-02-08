@@ -184,6 +184,7 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
       .andExpect(jsonPath("$.responseCode").value("API-005"))
 
   }
+
 }
 
 //FIXME add controller as bean
