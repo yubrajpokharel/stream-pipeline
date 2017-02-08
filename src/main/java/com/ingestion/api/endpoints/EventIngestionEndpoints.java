@@ -64,11 +64,12 @@ public class EventIngestionEndpoints {
                 return new AckNotification(new AckNotification.AckPayload(eventIdLambda.apply(payload), "API-002",
                         "Payload accepted"), HttpStatus.OK);
             } else {
+                logger.error("invalid request {}", eventIdLambda.apply(payload));
                 return new AckNotification(new AckNotification.AckPayload(eventIdLambda.apply(payload), "API-004",
                         "Validation failed"), HttpStatus.BAD_REQUEST);
             }
         } catch (ProcessingException | EventStreamProducerException e) {
-            logger.error(e);
+            logger.error("Could not persist the event, {}", e);
             return new AckNotification(new AckNotification.AckPayload(eventIdLambda.apply(payload), "API-005",
                     "API Server error"), HttpStatus.INTERNAL_SERVER_ERROR);
         }

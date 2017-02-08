@@ -149,6 +149,9 @@
 
 
 	<build>
+
+		<testSourceDirectory>src/test</testSourceDirectory>
+
 		<finalName>ingestion-pipeline</finalName>
 		<plugins>
 			<plugin>
