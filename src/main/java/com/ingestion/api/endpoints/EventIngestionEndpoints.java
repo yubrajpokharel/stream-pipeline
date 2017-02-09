@@ -1,9 +1,9 @@
 package com.ingestion.api.endpoints;
 
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.ingestion.api.domain.AckNotification;
 import com.ingestion.api.domain.HealthStatus;
 import com.ingestion.api.validation.JsonSchemaValidator;
+import com.ingestion.api.validation.fails.EventValidationRuntimeException;
 import eventstream.events.BaseEvent;
 import eventstream.events.JsonEvent;
 import eventstream.producer.fails.EventStreamProducerException;
@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -68,20 +70,21 @@ public class EventIngestionEndpoints {
         logger.info("payload={}", payload);
 
         try {
-            if (jsonSchemaValidator.isValidPayload(payload, schemaEventTypeLamda)) {
+            Map<Boolean, List<String>> validation = jsonSchemaValidator.isValidPayload(payload, schemaEventTypeLamda);
+            if (validation.keySet().stream().findFirst().get()) {
                 BaseEvent event = new JsonEvent(payload);
                 BaseEvent publishedEvent = eventProducer.publish(event);
                 logger.debug(publishedEvent.toJSON(publishedEvent));
-                return new AckNotification(new AckNotification.AckPayload(eventIdLambda.apply(payload), "API-002",
+                return new AckNotification(new AckNotification.AckPayload(eventIdLambda.apply(payload), "SUCCESS",
                         "Payload accepted"), HttpStatus.OK);
             } else {
                 logger.error("invalid request {}", eventIdLambda.apply(payload));
-                return new AckNotification(new AckNotification.AckPayload(eventIdLambda.apply(payload), "API-004",
+                return new AckNotification(new AckNotification.AckPayload(eventIdLambda.apply(payload), "VLDN_FAIL",
                         "Validation failed"), HttpStatus.BAD_REQUEST);
             }
-        } catch (ProcessingException | EventStreamProducerException e) {
+        } catch (EventValidationRuntimeException | EventStreamProducerException e) {
             logger.error("Could not persist the event, {}", e);
-            return new AckNotification(new AckNotification.AckPayload(eventIdLambda.apply(payload), "API-005",
+            return new AckNotification(new AckNotification.AckPayload(eventIdLambda.apply(payload), "SRV_FAIL",
                     "API Server error"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

@@ -6,6 +6,7 @@ import com.ingestion.api.validation.JsonSchemaValidator
 import org.json.JSONObject
 import org.scalatest.FunSpec
 
+import scala.collection.JavaConverters._
 /**
   * Created by prayagupd
   * on 2/3/17.
@@ -30,7 +31,9 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(schemaValidator.isValidPayload(json, eventTypeSchema))
+      val validation = schemaValidator.isValidPayload(json, eventTypeSchema)
+      assert(validation.keySet().asScala.head)
+      assert(validation.asScala.head._2.asScala.head == "resource /schema/EventWithoutDefinedSchema.json not found")
 
     }
 
@@ -43,7 +46,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(schemaValidator.isValidPayload(json, eventTypeSchema))
+      assert(schemaValidator.isValidPayload(json, eventTypeSchema).keySet().asScala.head)
 
     }
 
@@ -56,7 +59,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(schemaValidator.isValidPayload(json, eventTypeSchema))
+      assert(schemaValidator.isValidPayload(json, eventTypeSchema).keySet().asScala.head)
     }
 
     it("even when the payload have extra not_required fields") {
@@ -69,7 +72,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(schemaValidator.isValidPayload(json, eventTypeSchema))
+      assert(schemaValidator.isValidPayload(json, eventTypeSchema).keySet().asScala.head)
 
     }
 
@@ -84,7 +87,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(schemaValidator.isValidPayload(json, eventTypeSchema))
+      assert(schemaValidator.isValidPayload(json, eventTypeSchema).keySet().asScala.head)
 
     }
 
@@ -98,7 +101,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(schemaValidator.isValidPayload(json, eventTypeSchema))
+      assert(schemaValidator.isValidPayload(json, eventTypeSchema).keySet().asScala.head)
 
     }
   }
@@ -113,7 +116,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(!schemaValidator.isValidPayload(json, eventTypeSchema))
+      assert(!schemaValidator.isValidPayload(json, eventTypeSchema).keySet().asScala.head)
 
     }
 
@@ -126,7 +129,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(!schemaValidator.isValidPayload(json, eventTypeSchema))
+      assert(!schemaValidator.isValidPayload(json, eventTypeSchema).keySet().asScala.head)
 
     }
 
@@ -139,7 +142,7 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(!schemaValidator.isValidPayload(json, eventTypeSchema))
+      assert(!schemaValidator.isValidPayload(json, eventTypeSchema).keySet().asScala.head)
     }
 
     it("when the nested_property is present without required content") {
@@ -151,8 +154,23 @@ class JsonSchemaValidatorUnitSpecs extends FunSpec {
         }
         """.stripMargin
 
-      assert(!schemaValidator.isValidPayload(json, eventTypeSchema))
+      assert(!schemaValidator.isValidPayload(json, eventTypeSchema).keySet().asScala.head)
 
+    }
+
+    it("when the property value is not as defined in enum") {
+      val json =
+        """
+        {
+           "eventType" : "IngestionEventWithEnum",
+           "requiredProperty1" : "DIFFERENT_ENUM_VALUE"
+        }
+        """.stripMargin
+
+      val validation = schemaValidator.isValidPayload(json, eventTypeSchema)
+      assert(!validation.keySet().asScala.head)
+      println(validation.get(false).asScala.head ==
+        "instance value (\"DIFFERENT_ENUM_VALUE\") not found in enum (possible values: [\"ENUM_VALUE\"])")
     }
   }
 }

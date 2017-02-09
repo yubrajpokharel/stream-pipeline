@@ -103,7 +103,7 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
 
     response.andExpect(status().isOk)
       .andExpect(jsonPath("$.eventId").value("some-very-unique-id"))
-      .andExpect(jsonPath("$.responseCode").value("API-002"))
+      .andExpect(jsonPath("$.responseCode").value("SUCCESS"))
   }
 
   ignore("is able to ingest concurrent requests to the eventstream") {
@@ -162,7 +162,7 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
 
     response.andExpect(status().is(500))
       .andExpect(jsonPath("$.eventId").value("some-really-unique-id"))
-      .andExpect(jsonPath("$.responseCode").value("API-005"))
+      .andExpect(jsonPath("$.responseCode").value("SRV_FAIL"))
 
   }
 
@@ -192,7 +192,7 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
 
     response.andExpect(status().is(400))
       .andExpect(jsonPath("$.eventId").value("some-unique-id"))
-      .andExpect(jsonPath("$.responseCode").value("API-004"))
+      .andExpect(jsonPath("$.responseCode").value("VLDN_FAIL"))
   }
 
 }
