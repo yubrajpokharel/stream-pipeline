@@ -1,6 +1,8 @@
 package com.ingestion.api;
 
 import eventstream.producer.generic.GenericEventProducer;
+import eventstream.state.EventStream;
+import eventstream.state.KafkaEventStream;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +38,11 @@ public class EventIngestionPipeline {
     @Qualifier("eventIdLambda")
     Function<String, String> eventIdLamda() {
         return payload -> new JSONObject(payload).getJSONObject("MessageHeader").getString("EventId");
+    }
+
+    @Bean
+    EventStream eventStream(){
+        return new KafkaEventStream(); //FIXME make it configurable
     }
 
     public static void main(String[] args) {

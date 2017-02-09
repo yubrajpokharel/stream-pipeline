@@ -11,12 +11,12 @@ import lombok.Setter;
 public class HealthStatus {
 
     @Getter @Setter private String eventId;
-    @Getter @Setter private String responseCode;
-    @Getter @Setter private String responseMessage;
+    @Getter @Setter private String status;
+    @Getter @Setter private String description;
 
-    public HealthStatus(String eventId, String responseCode, String responseMessage) {
+    public HealthStatus(String eventId, String status, String description) {
         this.eventId = eventId;
-        this.responseCode = responseCode;
-        this.responseMessage = responseMessage;
+        this.status = status;
+        this.description = description;
     }
 }

@@ -44,7 +44,7 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
   override protected def beforeAll(): Unit = {
     super.beforeAll()
     EmbeddedKafka.start()
-  } //FIXME make it EventStream.start()
+  } //FIXME make it KafkaEventStream.start()
 
   override protected def afterAll(): Unit = {
     super.afterAll()
@@ -52,30 +52,11 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
   }
 
   //http://stackoverflow.com/questions/29490113/kafka-get-broker-host-from-zookeeper
-  test("health responseCode is API-001, when Eventstream is Up") {
+  test("health status is API-001, when Eventstream is Up") {
     val response: ResultActions = mockMvc.perform(get("/health")).andDo(print())
 
     response.andExpect(status().isOk)
-      .andExpect(jsonPath("$.responseCode").value("API-001"))
-  }
-
-  test("validates the incoming payload with the defined schema, and responds with bad request(API-004) on payload validation failure") {
-    val json =
-      """
-                {
-                  "MessageHeader" :{
-                     "EventName" : "TestIngestionEvent",
-                     "EventId" : "some-unique-id"
-                  },
-                  "someField2"  : "someValue"
-                }
-      """.stripMargin
-
-    val response: ResultActions = mockMvc.perform(post("/ingest").content(json)).andDo(print())
-
-    response.andExpect(status().is(400))
-      .andExpect(jsonPath("$.eventId").value("some-unique-id"))
-      .andExpect(jsonPath("$.responseCode").value("API-004"))
+      .andExpect(jsonPath("$.status").value("Green"))
   }
 
   test("accepts the JSON payload, matches against the schema and publishes to eventstream and then responds with success message") {
@@ -183,6 +164,35 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
       .andExpect(jsonPath("$.eventId").value("some-really-unique-id"))
       .andExpect(jsonPath("$.responseCode").value("API-005"))
 
+  }
+
+  test("health responseStatus is Red, when Eventstream is down") {
+    EmbeddedKafka.stop()
+
+    val response: ResultActions = mockMvc.perform(get("/health")).andDo(print())
+
+    response.andExpect(status().isOk)
+      .andExpect(jsonPath("$.status").value("Red"))
+      .andExpect(jsonPath("$.description").value("Eventstream state error : KeeperErrorCode = ConnectionLoss for /brokers/ids"))
+  }
+
+  test("validates the incoming payload with the defined schema, and responds with bad request(API-004) on payload validation failure") {
+    val json =
+      """
+                {
+                  "MessageHeader" :{
+                     "EventName" : "TestIngestionEvent",
+                     "EventId" : "some-unique-id"
+                  },
+                  "someField2"  : "someValue"
+                }
+      """.stripMargin
+
+    val response: ResultActions = mockMvc.perform(post("/ingest").content(json)).andDo(print())
+
+    response.andExpect(status().is(400))
+      .andExpect(jsonPath("$.eventId").value("some-unique-id"))
+      .andExpect(jsonPath("$.responseCode").value("API-004"))
   }
 
 }

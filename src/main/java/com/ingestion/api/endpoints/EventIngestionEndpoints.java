@@ -1,13 +1,14 @@
 package com.ingestion.api.endpoints;
 
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.ingestion.api.domain.AckNotification;
 import com.ingestion.api.domain.HealthStatus;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.ingestion.api.validation.JsonSchemaValidator;
 import eventstream.events.BaseEvent;
 import eventstream.events.JsonEvent;
 import eventstream.producer.fails.EventStreamProducerException;
 import eventstream.producer.generic.GenericEventProducer;
+import eventstream.state.EventStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,9 +46,19 @@ public class EventIngestionEndpoints {
     @Qualifier("eventIdLambda")
     Function<String, String> eventIdLambda;
 
+    @Autowired
+    EventStream eventStream;
+
     @RequestMapping("/health")
     public HealthStatus health() {
-        return new HealthStatus(UUID.randomUUID().toString(), "API-001", "Green");
+        try {
+            if (eventStream.activeNodes().size() > 0) {
+                return new HealthStatus(UUID.randomUUID().toString(), "Green", eventStream.activeNodes().toString());
+            }
+            return new HealthStatus(UUID.randomUUID().toString(), "Red", "Eventstream is down");
+        } catch (Exception e) {
+            return new HealthStatus(UUID.randomUUID().toString(), "Red", e.getMessage());
+        }
     }
 
     @RequestMapping(value = "/ingest", method = RequestMethod.POST)
