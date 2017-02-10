@@ -31,11 +31,11 @@ public class JsonSchemaValidator {
             final JsonSchema schema = schemaFactory.getJsonSchema(JsonLoader.fromResource("/schema/" +
                      schemaSourceLamda.apply(payload) + ".json"));
             ProcessingReport validation = schema.validate(objectMapper.readTree(payload));
-            List<String> vs = new ArrayList<>();
-            validation.forEach(processingMessage -> vs.add(processingMessage.getMessage()));
+            List<String> validationMessages = new ArrayList<>();
+            validation.forEach(processingMessage -> validationMessages.add(processingMessage.getMessage()));
 
             return new HashMap<Boolean, List<String>>(){{
-                put(validation.isSuccess(), vs);
+                put(validation.isSuccess(), validationMessages);
             }};
         } catch (IOException e) {
             e.printStackTrace();

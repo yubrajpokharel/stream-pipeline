@@ -11,6 +11,7 @@ import eventstream.producer.generic.GenericEventProducer;
 import eventstream.state.EventStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
@@ -19,10 +20,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Created by prayagupd
@@ -41,7 +47,7 @@ public class EventIngestionEndpoints {
     JsonSchemaValidator jsonSchemaValidator;
 
     @Autowired
-    @Qualifier("schemaEventTypeLamda")
+    @Qualifier("schemaEventTypeLambda")
     Function<String, String> schemaEventTypeLamda;
 
     @Autowired
@@ -79,8 +85,11 @@ public class EventIngestionEndpoints {
                         "Payload accepted"), HttpStatus.OK);
             } else {
                 logger.error("invalid request {}", eventIdLambda.apply(payload));
+                List<String> errors = validation.values().stream().flatMap(Collection::stream).collect(toList());
+                JSONArray array = new JSONArray(errors);
+
                 return new AckNotification(new AckNotification.AckPayload(eventIdLambda.apply(payload), "VLDN_FAIL",
-                        "Validation failed"), HttpStatus.BAD_REQUEST);
+                        array.toString()), HttpStatus.BAD_REQUEST);
             }
         } catch (EventValidationRuntimeException | EventStreamProducerException e) {
             logger.error("Could not persist the event, {}", e);

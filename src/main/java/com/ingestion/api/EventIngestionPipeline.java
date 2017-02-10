@@ -29,7 +29,7 @@ public class EventIngestionPipeline {
     }
 
     @Bean
-    @Qualifier("schemaEventTypeLamda")
+    @Qualifier("schemaEventTypeLambda")
     Function<String, String> schemaEventTypeLamda() {
         return payload -> new JSONObject(payload).getJSONObject("MessageHeader").getString("EventName");
     }
@@ -42,7 +42,7 @@ public class EventIngestionPipeline {
 
     @Bean
     EventStream eventStream(){
-        return new KafkaEventStream(); //FIXME make it configurable
+        return new KafkaEventStream(); //FIXME make me configurable sir
     }
 
     public static void main(String[] args) {
