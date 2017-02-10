@@ -37,6 +37,8 @@ public class EventIngestionPipeline {
     @Bean
     @Qualifier("eventIdLambda")
     Function<String, String> eventIdLamda() {
+        //FIXME when there's no eventId found, throw proper response
+        //it would not respond anything else
         return payload -> new JSONObject(payload).getJSONObject("MessageHeader").getString("EventId");
     }
 

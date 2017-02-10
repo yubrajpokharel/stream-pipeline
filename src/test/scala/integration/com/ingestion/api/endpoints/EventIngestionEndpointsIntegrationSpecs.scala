@@ -43,8 +43,8 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-    EmbeddedKafka.start()
-  } //FIXME make it KafkaEventStream.start()
+    EmbeddedKafka.start()//FIXME make it eventStream.startBroker()
+  }
 
   override protected def afterAll(): Unit = {
     super.afterAll()
@@ -52,7 +52,7 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
   }
 
   //http://stackoverflow.com/questions/29490113/kafka-get-broker-host-from-zookeeper
-  test("health status is API-001, when Eventstream is Up") {
+  test("health status is Green, when Eventstream is Up") {
     val response: ResultActions = mockMvc.perform(get("/health")).andDo(print())
 
     response.andExpect(status().isOk)

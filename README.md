@@ -4,7 +4,21 @@ eventstream pipeline
 
 ![](EventPipeline.png)
 
-tests
+response codes (correlated with eventId)
+----------------------------------------
+
+
+```
+|-----------------------|-----------|-------------------------------|
+| standard http response| code      | response message              |
+------------------------|-----------|-------------------------------|
+| 200                   | SUCCESS   | Payload accepted              |
+| 400                   | VLDN_FAIL | Payload Validation failed     |
+| 500                   | SRV_FAIL  | Internal server error occured |
+|-----------------------|-----------|-------------------------------|
+```
+
+specs
 -----
 
 ```
@@ -42,7 +56,7 @@ Ingestion
 ```bash
 curl -H "Content-Type: application/json" -X POST -d '{"MessageHeader" : { "EventId" : "some-uniq-id", "EventName" : "TestIngestionEvent"}, "someField1" : "someValue1"}' localhost:9000/ingestion-api/ingest
 
-{"eventId":"some-uniq-id","responseCode":"API-002","responseMessage":"Payload accepted"}
+{"eventId":"some-uniq-id","responseCode":"SUCCESS","responseMessage":"Payload accepted"}
 
 ```
 

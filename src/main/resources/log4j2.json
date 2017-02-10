@@ -4,7 +4,7 @@
     "appenders": {
       "RollingFile": {
         "name": "rollingStone",
-        "fileName": "ingrstion-api.log",
+        "fileName": "ingestion-api.log",
         "filePattern": "ingestion-api-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz",
         "immediateFlush" : false,
         "JSONLayout": {

@@ -12,6 +12,7 @@ import eventstream.state.EventStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
@@ -25,8 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 
@@ -72,13 +71,14 @@ public class EventIngestionEndpoints {
     @RequestMapping(value = "/ingest", method = RequestMethod.POST)
     public AckNotification ingest(@RequestBody String payload) {
 
+        JSONObject payloadJson = new JSONObject(payload);
         //TODO create a LogService
-        logger.info("payload={}", payload);
+        logger.info("payload={}", payloadJson.toString());
 
         try {
             Map<Boolean, List<String>> validation = jsonSchemaValidator.isValidPayload(payload, schemaEventTypeLamda);
             if (validation.keySet().stream().findFirst().get()) {
-                BaseEvent event = new JsonEvent(payload);
+                BaseEvent event = new JsonEvent(payloadJson.toString());
                 BaseEvent publishedEvent = eventProducer.publish(event);
                 logger.debug(publishedEvent.toJSON(publishedEvent));
                 return new AckNotification(new AckNotification.AckPayload(eventIdLambda.apply(payload), "SUCCESS",
