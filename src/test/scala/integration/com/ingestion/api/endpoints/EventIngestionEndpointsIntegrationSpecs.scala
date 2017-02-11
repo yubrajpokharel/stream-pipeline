@@ -7,12 +7,14 @@ import java.util.{Collections, Properties}
 import eventstream.producer.generic.GenericEventProducer
 import kafka.admin.AdminUtils
 import kafka.utils.ZkUtils
-import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
+import net.manub.embeddedkafka.EmbeddedKafka
 import org.I0Itec.zkclient.{ZkClient, ZkConnection}
 import org.apache.kafka.clients.consumer.{ConsumerRecords, KafkaConsumer}
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.json.JSONObject
 import org.junit.runner.RunWith
+import org.scalatest.eventstream.{EventStreamConfig, KafkaEmbeddedEventStream}
+import org.scalatest.springboot.SpringTestContextManager
 import org.scalatest.{FunSuite, Matchers}
 import org.springframework.beans.factory.annotation.{Autowired, Value}
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -35,20 +37,22 @@ import scala.collection.JavaConverters._
 //@ContextConfiguration(classes = Array(classOf[TestConfiguration]))
 @SpringBootTest
 @AutoConfigureMockMvc
-class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestContextManagement with Matchers {
+class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestContextManager with Matchers {
 
   @Autowired val mockMvc: MockMvc = null
 
-  implicit val streamingConfig = EmbeddedKafkaConfig(kafkaPort = 9092, zooKeeperPort = 2181) //EventStreamConfig
+  implicit val streamingConfig = EventStreamConfig(eventStreamPort = 9092, eventStreamStatePort = 2181) //EventStreamConfig
+
+  val eventStream = new KafkaEmbeddedEventStream
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-    EmbeddedKafka.start()//FIXME make it eventStream.startBroker()
+    eventStream.startBroker
   }
 
   override protected def afterAll(): Unit = {
     super.afterAll()
-    EmbeddedKafka.stop()
+    eventStream.stopBroker()
   }
 
   //http://stackoverflow.com/questions/29490113/kafka-get-broker-host-from-zookeeper
