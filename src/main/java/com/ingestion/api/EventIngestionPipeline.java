@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.web.servlet.ViewResolver;
+import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 import java.util.function.Function;
 
@@ -45,6 +47,13 @@ public class EventIngestionPipeline {
     @Bean
     EventStream eventStream(){
         return new KafkaEventStream(); //FIXME make me configurable sir
+    }
+
+    @Bean
+    public ViewResolver getViewResolver() {
+        InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
+        viewResolver.setPrefix("templates/");
+        return viewResolver;
     }
 
     public static void main(String[] args) {
