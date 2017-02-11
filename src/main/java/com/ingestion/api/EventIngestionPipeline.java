@@ -1,8 +1,9 @@
 package com.ingestion.api;
 
-import eventstream.producer.generic.GenericEventProducer;
+import eventstream.EventProducer;
+import eventstream.producer.EventProducerFactory;
 import eventstream.state.EventStream;
-import eventstream.state.KafkaEventStream;
+import eventstream.state.factory.EventStreamFactory;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,8 +27,8 @@ public class EventIngestionPipeline {
     String eventStreamName;
 
     @Bean
-    GenericEventProducer eventProducer() {
-        return new GenericEventProducer(eventStreamName);
+    EventProducer eventProducer() {
+        return new EventProducerFactory().create(eventStreamName);
     }
 
     @Bean
@@ -46,7 +47,7 @@ public class EventIngestionPipeline {
 
     @Bean
     EventStream eventStream(){
-        return new KafkaEventStream(); //FIXME make me configurable sir
+        return new EventStreamFactory().create();
     }
 
     @Bean

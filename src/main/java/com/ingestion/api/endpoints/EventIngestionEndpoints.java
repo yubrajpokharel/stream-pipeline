@@ -4,10 +4,10 @@ import com.ingestion.api.domain.AckNotification;
 import com.ingestion.api.domain.HealthStatus;
 import com.ingestion.api.validation.JsonSchemaValidator;
 import com.ingestion.api.validation.fails.EventValidationRuntimeException;
+import eventstream.EventProducer;
 import eventstream.events.BaseEvent;
 import eventstream.events.JsonEvent;
 import eventstream.producer.fails.EventStreamProducerException;
-import eventstream.producer.generic.GenericEventProducer;
 import eventstream.state.EventStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,7 +41,7 @@ public class EventIngestionEndpoints {
     private Logger logger = LogManager.getLogger(EventIngestionEndpoints.class);
 
     @Autowired
-    GenericEventProducer eventProducer;
+    EventProducer eventProducer;
 
     @Autowired
     JsonSchemaValidator jsonSchemaValidator;
