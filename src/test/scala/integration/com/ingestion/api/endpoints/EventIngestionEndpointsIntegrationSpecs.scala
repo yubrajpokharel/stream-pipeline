@@ -13,7 +13,8 @@ import org.apache.kafka.clients.consumer.{ConsumerRecords, KafkaConsumer}
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.json.JSONObject
 import org.junit.runner.RunWith
-import org.scalatest.eventstream.{EventStreamConfig, KafkaEmbeddedEventStream}
+import org.scalatest.eventstream.factory.EmbeddedEventStreamFactory
+import org.scalatest.eventstream.kafka.EventStreamConfig
 import org.scalatest.springboot.SpringTestContextManager
 import org.scalatest.{FunSuite, Matchers}
 import org.springframework.beans.factory.annotation.{Autowired, Value}
@@ -41,9 +42,9 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
 
   @Autowired val mockMvc: MockMvc = null
 
-  implicit val streamingConfig = EventStreamConfig(eventStreamPort = 9092, eventStreamStatePort = 2181) //EventStreamConfig
+  implicit val streamingConfig = EventStreamConfig(eventStreamPort = 9092, eventStreamStatePort = 2181)
 
-  val eventStream = new KafkaEmbeddedEventStream
+  val eventStream = new EmbeddedEventStreamFactory().create()
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
