@@ -3,8 +3,8 @@ package com.ingestion.api.endpoints.validation
 import java.util.function.Function
 
 import com.ingestion.api.validation.JsonSchemaValidator
+import com.specs.UnitSpecs
 import org.json.JSONObject
-import org.scalatest.FunSpec
 
 import scala.collection.JavaConverters._
 /**
@@ -12,7 +12,7 @@ import scala.collection.JavaConverters._
   * on 2/3/17.
   */
 
-class JsonSchemaValidatorUnitSpecs extends FunSpec {
+class JsonSchemaValidatorUnitSpecs extends UnitSpecs {
 
   val schemaValidator = new JsonSchemaValidator
 

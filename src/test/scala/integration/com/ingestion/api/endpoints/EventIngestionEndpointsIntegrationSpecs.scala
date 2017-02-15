@@ -4,6 +4,7 @@ import java.util
 import java.util.function.Function
 import java.util.{Collections, Properties}
 
+import com.specs.ComponentSpecs
 import eventstream.producer.generic.GenericEventProducer
 import kafka.admin.AdminUtils
 import kafka.utils.ZkUtils
@@ -13,10 +14,10 @@ import org.apache.kafka.clients.consumer.{ConsumerRecords, KafkaConsumer}
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.json.JSONObject
 import org.junit.runner.RunWith
+import org.scalatest.Matchers
 import org.scalatest.eventstream.factory.EmbeddedEventStreamFactory
 import org.scalatest.eventstream.kafka.EventStreamConfig
 import org.scalatest.springboot.SpringTestContextManager
-import org.scalatest.{FunSuite, Matchers}
 import org.springframework.beans.factory.annotation.{Autowired, Value}
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -38,7 +39,7 @@ import scala.collection.JavaConverters._
 //@ContextConfiguration(classes = Array(classOf[TestConfiguration]))
 @SpringBootTest
 @AutoConfigureMockMvc
-class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestContextManager with Matchers {
+class EventIngestionEndpointsIntegrationSpecs extends ComponentSpecs with SpringTestContextManager with Matchers {
 
   @Autowired val mockMvc: MockMvc = null
 
@@ -57,14 +58,14 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
   }
 
   //http://stackoverflow.com/questions/29490113/kafka-get-broker-host-from-zookeeper
-  test("health status is Green, when Eventstream is Up") {
+  scenario("health status is Green, when Eventstream is Up") {
     val response: ResultActions = mockMvc.perform(get("/health")).andDo(print())
 
     response.andExpect(status().isOk)
       .andExpect(jsonPath("$.status").value("Green"))
   }
 
-  test("accepts the JSON payload, matches against the schema and publishes to eventstream and then responds with success message") {
+  scenario("accepts the JSON payload, matches against the schema and publishes to eventstream and then responds with success message") {
     val json =
       """
         {
@@ -149,7 +150,7 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
     assert(events.count() == 100)
   }
 
-  test("responds back 500 when could not write to the EventStream") {
+  scenario("responds back 500 when could not write to the EventStream") {
     EmbeddedKafka.stop()
 
     val json =
@@ -171,7 +172,7 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
 
   }
 
-  test("health responseStatus is Red, when Eventstream is down") {
+  scenario("health responseStatus is Red, when Eventstream is down") {
     EmbeddedKafka.stop()
 
     val response: ResultActions = mockMvc.perform(get("/health")).andDo(print())
@@ -181,7 +182,7 @@ class EventIngestionEndpointsIntegrationSpecs extends FunSuite with SpringTestCo
       .andExpect(jsonPath("$.description").value("Eventstream state error : KeeperErrorCode = ConnectionLoss for /brokers/ids"))
   }
 
-  test("validates the incoming payload with the defined schema, and responds with bad request(API-004) on payload validation failure") {
+  scenario("validates the incoming payload with the defined schema, and responds with bad request(API-004) on payload validation failure") {
     val json =
       """
                 {

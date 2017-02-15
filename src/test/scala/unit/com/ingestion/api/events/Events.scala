@@ -7,7 +7,7 @@ import eventstream.events.BaseEvent
   * on 2/2/17.
   */
 
-class SomeEventForIngestion(someField_1: String) extends BaseEvent {
+abstract class SomeEventForIngestion(someField_1: String) extends BaseEvent {
   var someField1 = someField_1
 
   def this(){

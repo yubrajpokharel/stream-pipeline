@@ -1,6 +1,6 @@
 package com.ingestion.api;
 
-import eventstream.EventProducer;
+import eventstream.producer.EventProducer;
 import eventstream.producer.EventProducerFactory;
 import eventstream.state.EventStream;
 import eventstream.state.factory.EventStreamFactory;
@@ -41,7 +41,7 @@ public class EventIngestionPipeline {
     @Qualifier("eventIdLambda")
     Function<String, String> eventIdLamda() {
         //FIXME when there's no eventId found, throw proper response
-        //it would not respond anything else
+        //it would not respond anything otherwise
         return payload -> new JSONObject(payload).getJSONObject("MessageHeader").getString("EventId");
     }
 
