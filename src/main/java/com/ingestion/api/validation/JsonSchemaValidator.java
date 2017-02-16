@@ -19,6 +19,12 @@ import java.util.Map;
 import java.util.Collections;
 import java.util.function.Function;
 
+/**
+ * validates the JSON payload against the schema defined in
+ * schema package
+ * created by prayagupd
+ */
+
 @Component
 public class JsonSchemaValidator {
 

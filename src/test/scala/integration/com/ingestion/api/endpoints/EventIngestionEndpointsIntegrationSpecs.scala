@@ -4,8 +4,8 @@ import java.util
 import java.util.function.Function
 import java.util.{Collections, Properties}
 
+import com.eventstream.producer.{EventProducer, EventProducerFactory}
 import com.specs.ComponentSpecs
-import eventstream.producer.generic.GenericEventProducer
 import kafka.admin.AdminUtils
 import kafka.utils.ZkUtils
 import net.manub.embeddedkafka.EmbeddedKafka
@@ -213,7 +213,7 @@ class TestConfiguration {
   val eventStreamName: String = null
 
   @Bean
-  def eventProducer: GenericEventProducer = new GenericEventProducer(eventStreamName)
+  def eventProducer: EventProducer = new EventProducerFactory().create(eventStreamName)
 
   @Bean
   def schemaEventType: Function[String, String] = {

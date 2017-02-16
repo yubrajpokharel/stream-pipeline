@@ -1,9 +1,9 @@
 package com.ingestion.api;
 
-import eventstream.producer.EventProducer;
-import eventstream.producer.EventProducerFactory;
-import eventstream.state.EventStream;
-import eventstream.state.factory.EventStreamFactory;
+import com.eventstream.producer.EventProducer;
+import com.eventstream.producer.EventProducerFactory;
+import com.eventstream.state.EventStream;
+import com.eventstream.state.factory.EventStreamFactory;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +16,7 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import java.util.function.Function;
 
 /**
+ * java singleton beans initialisation
  * Created by prayagupd
  * on 1/29/17.
  */

@@ -1,6 +1,6 @@
 package com.ingestion.api.events
 
-import eventstream.events.BaseEvent
+import com.eventstream.events.BaseEvent
 
 /**
   * Created by prayagupd

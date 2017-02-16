@@ -1,14 +1,14 @@
 package com.ingestion.api.endpoints;
 
+import com.eventstream.events.BaseEvent;
+import com.eventstream.events.JsonEvent;
+import com.eventstream.producer.EventProducer;
+import com.eventstream.producer.fails.EventStreamProducerException;
+import com.eventstream.state.EventStream;
 import com.ingestion.api.domain.AckNotification;
 import com.ingestion.api.domain.HealthStatus;
 import com.ingestion.api.validation.JsonSchemaValidator;
 import com.ingestion.api.validation.fails.EventValidationRuntimeException;
-import eventstream.events.BaseEvent;
-import eventstream.events.JsonEvent;
-import eventstream.producer.EventProducer;
-import eventstream.producer.fails.EventStreamProducerException;
-import eventstream.state.EventStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
@@ -31,6 +31,12 @@ import java.util.function.Function;
 import static java.util.stream.Collectors.toList;
 
 /**
+ * http endpoints for events ingestion, which talk the streaming-driver to
+ * write the events to the configured eventstore
+ *
+ * responds back to the client with the standard HTTP statuses and ingestion
+ * status as http body (SUCCESS or VLDN_FAIL or SRV_FAIL)
+ *
  * Created by prayagupd
  * on 1/29/17.
  */
