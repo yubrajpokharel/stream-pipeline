@@ -14,6 +14,7 @@
 			<groupId>com.lmax</groupId>
 			<artifactId>disruptor</artifactId>
 			<version>3.3.6</version>
+			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
@@ -175,8 +176,9 @@
 				<configuration>
 					<reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
 					<junitxml>.</junitxml>
-					<filereports>test.log</filereports>
+					<filereports>eventstream-ingestion.log</filereports>
 					<parallel>false</parallel>
+					<tagsToInclude>KafkaStream</tagsToInclude>
 				</configuration>
 				<executions>
 					<execution>

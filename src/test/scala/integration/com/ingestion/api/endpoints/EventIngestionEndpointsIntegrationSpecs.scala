@@ -15,8 +15,9 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.json.JSONObject
 import org.junit.runner.RunWith
 import org.scalatest.Matchers
+import org.scalatest.eventstream.StreamConfig
 import org.scalatest.eventstream.factory.EmbeddedEventStreamFactory
-import org.scalatest.eventstream.kafka.EventStreamConfig
+import org.scalatest.eventstream.tags.KafkaStreamTag
 import org.scalatest.springboot.SpringTestContextManager
 import org.springframework.beans.factory.annotation.{Autowired, Value}
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -43,7 +44,10 @@ class EventIngestionEndpointsIntegrationSpecs extends ComponentSpecs with Spring
 
   @Autowired val mockMvc: MockMvc = null
 
-  implicit val streamingConfig = EventStreamConfig(eventStreamPort = 9092, eventStreamStatePort = 2181)
+  val Stream = "Pipeline_Stream"
+
+  implicit val streamingConfig = StreamConfig(streamTcpPort = 9092, streamStateTcpPort = 2181,
+    stream = Stream, partition = 1)
 
   val eventStream = new EmbeddedEventStreamFactory().create()
 
@@ -54,18 +58,19 @@ class EventIngestionEndpointsIntegrationSpecs extends ComponentSpecs with Spring
 
   override protected def afterAll(): Unit = {
     super.afterAll()
-    eventStream.stopBroker()
+    eventStream.stopBroker
   }
 
   //http://stackoverflow.com/questions/29490113/kafka-get-broker-host-from-zookeeper
-  scenario("health status is Green, when Eventstream is Up") {
+  scenario("health status is Green, when Eventstream is Up", KafkaStreamTag) {
     val response: ResultActions = mockMvc.perform(get("/health")).andDo(print())
 
     response.andExpect(status().isOk)
       .andExpect(jsonPath("$.status").value("Green"))
   }
 
-  scenario("accepts the JSON payload, matches against the schema and publishes to eventstream and then responds with success message") {
+  scenario("accepts the JSON payload, matches against the schema and publishes to eventstream and " +
+    "then responds with success message", KafkaStreamTag) {
     val json =
       """
         {
@@ -90,12 +95,12 @@ class EventIngestionEndpointsIntegrationSpecs extends ComponentSpecs with Spring
       }
     })
 
-    assert(nativeKafkaConsumer.listTopics().asScala.map(_._1) == List("EventStream"))
+    assert(nativeKafkaConsumer.listTopics().asScala.map(_._1) == List(Stream))
 
-    nativeKafkaConsumer.subscribe(util.Arrays.asList("EventStream"))
+    nativeKafkaConsumer.subscribe(util.Arrays.asList(Stream))
 
     assert(AdminUtils.topicExists(new ZkUtils(new ZkClient("localhost:2181", 10000, 15000),
-      new ZkConnection("localhost:2181"), false), "EventStream"))
+      new ZkConnection("localhost:2181"), false), Stream))
 
     val events: ConsumerRecords[String, String] = nativeKafkaConsumer.poll(1000)
 
@@ -112,7 +117,7 @@ class EventIngestionEndpointsIntegrationSpecs extends ComponentSpecs with Spring
       .andExpect(jsonPath("$.responseCode").value("SUCCESS"))
   }
 
-  ignore("is able to ingest concurrent requests to the eventstream") {
+  ignore("is able to ingest concurrent requests to the eventstream", KafkaStreamTag) {
 
     val nativeKafkaConsumer = new KafkaConsumer[String, String](new Properties() {
       {
@@ -125,7 +130,7 @@ class EventIngestionEndpointsIntegrationSpecs extends ComponentSpecs with Spring
       }
     })
 
-    nativeKafkaConsumer.subscribe(Collections.singletonList("EventStream"))
+    nativeKafkaConsumer.subscribe(Collections.singletonList(Stream))
 
     assert(nativeKafkaConsumer.poll(1000).count() == 0)
 
@@ -150,7 +155,7 @@ class EventIngestionEndpointsIntegrationSpecs extends ComponentSpecs with Spring
     assert(events.count() == 100)
   }
 
-  scenario("responds back 500 when could not write to the EventStream") {
+  scenario("responds back 500 when could not write to the EventStream", KafkaStreamTag) {
     EmbeddedKafka.stop()
 
     val json =
@@ -172,7 +177,7 @@ class EventIngestionEndpointsIntegrationSpecs extends ComponentSpecs with Spring
 
   }
 
-  scenario("health responseStatus is Red, when Eventstream is down") {
+  scenario("health responseStatus is Red, when Eventstream is down", KafkaStreamTag) {
     EmbeddedKafka.stop()
 
     val response: ResultActions = mockMvc.perform(get("/health")).andDo(print())
@@ -182,7 +187,7 @@ class EventIngestionEndpointsIntegrationSpecs extends ComponentSpecs with Spring
       .andExpect(jsonPath("$.description").value("Eventstream state error : KeeperErrorCode = ConnectionLoss for /brokers/ids"))
   }
 
-  scenario("validates the incoming payload with the defined schema, and responds with bad request(API-004) on payload validation failure") {
+  scenario("validates the incoming payload with the defined schema, and responds with bad request(API-004) on payload validation failure", KafkaStreamTag) {
     val json =
       """
                 {
