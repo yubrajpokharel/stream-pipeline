@@ -85,12 +85,12 @@ public class EventIngestionEndpoints {
 
         JSONObject payloadJson = new JSONObject(payload);
         //TODO create a LogService
-        logger.info("payload={}", payloadJson.toString());
+        logger.info("payload={}, size={} bytes", payloadJson.toString(), payloadJson.toString().getBytes().length);
 
         try {
             Map<Boolean, List<String>> validation = jsonSchemaValidator.isValidPayload(payload, schemaEventTypeLamda);
             if (validation.keySet().stream().findFirst().get()) {
-                BaseEvent event = new JsonEvent(payloadJson.toString());
+                BaseEvent event = new JsonEvent(payloadJson.toString(), eventIdLambda);
                 BaseEvent publishedEvent = eventProducer.publish(event);
                 logger.debug(publishedEvent.toJSON(publishedEvent));
                 return new AckNotification(new AckNotification.AckPayload(eventIdLambda.apply(payload), "SUCCESS",

@@ -1,23 +1,16 @@
 package com.ingestion.api.endpoints
 
-import java.util
 import java.util.function.Function
-import java.util.{Collections, Properties}
 
+import com.amazonaws.services.kinesis.model.AmazonKinesisException
 import com.eventstream.producer.{EventProducer, EventProducerFactory}
 import com.specs.ComponentSpecs
-import kafka.admin.AdminUtils
-import kafka.utils.ZkUtils
-import net.manub.embeddedkafka.EmbeddedKafka
-import org.I0Itec.zkclient.{ZkClient, ZkConnection}
-import org.apache.kafka.clients.consumer.{ConsumerRecords, KafkaConsumer}
-import org.apache.kafka.common.serialization.StringDeserializer
+import integration.com.ingestion.api.endpoints.SpecsConfig.taggedConfig
 import org.json.JSONObject
 import org.junit.runner.RunWith
 import org.scalatest.Matchers
-import org.scalatest.eventstream.StreamConfig
 import org.scalatest.eventstream.factory.EmbeddedEventStreamFactory
-import org.scalatest.eventstream.tags.KafkaStreamTag
+import org.scalatest.eventstream.{ConsumerConfig, StreamConfig}
 import org.scalatest.springboot.SpringTestContextManager
 import org.springframework.beans.factory.annotation.{Autowired, Value}
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -28,8 +21,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.{get,
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.{jsonPath, status}
 import org.springframework.test.web.servlet.{MockMvc, ResultActions}
-
-import scala.collection.JavaConverters._
 
 /**
   * Created by prayagupd
@@ -44,126 +35,82 @@ class EventIngestionEndpointsIntegrationSpecs extends ComponentSpecs with Spring
 
   @Autowired val mockMvc: MockMvc = null
 
-  val Stream = "Pipeline_Stream"
+  val StreamName = "Pipeline_Stream"
+  var partitionId = ""
 
   implicit val streamingConfig = StreamConfig(streamTcpPort = 9092, streamStateTcpPort = 2181,
-    stream = Stream, partition = 1)
+    stream = StreamName,  numOfPartition = 1)
 
   val eventStream = new EmbeddedEventStreamFactory().create()
 
+  val WAIT_TIME = 2000
+
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-    eventStream.startBroker
+    partitionId = eventStream.startBroker._2.head
   }
 
   override protected def afterAll(): Unit = {
     super.afterAll()
-    eventStream.stopBroker
+    eventStream.destroyBroker
   }
 
   //http://stackoverflow.com/questions/29490113/kafka-get-broker-host-from-zookeeper
-  scenario("health status is Green, when Eventstream is Up", KafkaStreamTag) {
+  ignore("health status is Green, when Eventstream is Up", taggedConfig) {
+
     val response: ResultActions = mockMvc.perform(get("/health")).andDo(print())
 
     response.andExpect(status().isOk)
       .andExpect(jsonPath("$.status").value("Green"))
   }
 
-  scenario("accepts the JSON payload, matches against the schema and publishes to eventstream and " +
-    "then responds with success message", KafkaStreamTag) {
+  scenario("accepts the JSON payload, matches against the schema and publishes to event-stream and " +
+    "then responds with success message", taggedConfig) {
     val json =
       """
         {
           "MessageHeader" : {
-              "EventId" : "some-very-unique-id",
+              "EventId" : "some-very-unique-id-for-valid-payload",
               "EventName" : "TestIngestionEvent"
            },
           "someField1"  : "someValue"
         }
       """.stripMargin.replaceAll("\\+s", "")
 
+    eventStream.assertStreamExists(streamingConfig)
+
     val response: ResultActions = mockMvc.perform(post("/ingest").content(json)).andDo(print())
 
     //then
-    val nativeKafkaConsumer = new KafkaConsumer[String, String](new Properties() {
-      {
-        put("bootstrap.servers", "localhost:9092") //streaming.config
-        put("group.id", "consumer_group_test")
-        put("auto.offset.reset", "earliest")
-        put("key.deserializer", classOf[StringDeserializer].getName)
-        put("value.deserializer", classOf[StringDeserializer].getName)
-      }
-    })
+    Thread.sleep(WAIT_TIME)
+    val events = eventStream.consumeEvent(streamingConfig,
+      ConsumerConfig("testevent_stream_good_consumer", partitionId, "TRIM_HORIZON"), StreamName)
 
-    assert(nativeKafkaConsumer.listTopics().asScala.map(_._1) == List(Stream))
+    assert(events.size == 1)
 
-    nativeKafkaConsumer.subscribe(util.Arrays.asList(Stream))
-
-    assert(AdminUtils.topicExists(new ZkUtils(new ZkClient("localhost:2181", 10000, 15000),
-      new ZkConnection("localhost:2181"), false), Stream))
-
-    val events: ConsumerRecords[String, String] = nativeKafkaConsumer.poll(1000)
-
-    val persistedEvent = new JSONObject(events.asScala.map(_.value()).head)
+    val persistedEvent = events.head
     //    assert(persistedEvent.getString("eventType") == "SomeEventForIngestion")
     assert(persistedEvent.getString("someField1") == "someValue")
     //    assert(persistedEvent.getLong("createdTime") != 0l) //FIXME
 
-    assert(events.partitions().size() == 1)
-    assert(events.count() == 1)
-
     response.andExpect(status().isOk)
-      .andExpect(jsonPath("$.eventId").value("some-very-unique-id"))
+      .andExpect(jsonPath("$.eventId").value("some-very-unique-id-for-valid-payload"))
       .andExpect(jsonPath("$.responseCode").value("SUCCESS"))
   }
 
-  ignore("is able to ingest concurrent requests to the eventstream", KafkaStreamTag) {
-
-    val nativeKafkaConsumer = new KafkaConsumer[String, String](new Properties() {
-      {
-        put("bootstrap.servers", "localhost:9092") //streaming.config
-        put("group.id", "consumer_group_test_new")
-        put("client.id", "TestEventConsumer")
-        put("auto.offset.reset", "latest")
-        put("key.deserializer", classOf[StringDeserializer].getName)
-        put("value.deserializer", classOf[StringDeserializer].getName)
-      }
-    })
-
-    nativeKafkaConsumer.subscribe(Collections.singletonList(Stream))
-
-    assert(nativeKafkaConsumer.poll(1000).count() == 0)
-
-    val requests = Range(0, 100).map(identifier => {
-      s"""
-        {
-          "MessageHeader" :{
-             "EventName" : "TestIngestionEvent"
-          },
-          "someField1"  : "someValue-${identifier}"
-        }
-      """.stripMargin.replaceAll("\\+s", "")
-    }).toList
-
-    requests.map(json => {
-      mockMvc.perform(post("/ingest").content(json)).andDo(print())
-    }).foreach(x => x.andExpect(status().isOk))
-
-    //then
-    val events = nativeKafkaConsumer.poll(1000)
-
-    assert(events.count() == 100)
-  }
-
-  scenario("responds back 500 when could not write to the EventStream", KafkaStreamTag) {
-    EmbeddedKafka.stop()
+  scenario("responds back 500 when could not write to the EventStream", taggedConfig) {
+    try {
+      eventStream.destroyBroker
+    } catch {
+      case e: AmazonKinesisException => println(e.getMessage)
+    }
 
     val json =
       """
                 {
                   "MessageHeader" :{
                      "EventName" : "TestIngestionEvent",
-                     "EventId" : "some-really-unique-id"
+                     "EventId" : "some-really-unique-id-for-server-failure"
                   },
                   "someField1"  : "someValue"
                 }
@@ -172,28 +119,32 @@ class EventIngestionEndpointsIntegrationSpecs extends ComponentSpecs with Spring
     val response: ResultActions = mockMvc.perform(post("/ingest").content(json)).andDo(print())
 
     response.andExpect(status().is(500))
-      .andExpect(jsonPath("$.eventId").value("some-really-unique-id"))
+      .andExpect(jsonPath("$.eventId").value("some-really-unique-id-for-server-failure"))
       .andExpect(jsonPath("$.responseCode").value("SRV_FAIL"))
 
   }
 
-  scenario("health responseStatus is Red, when Eventstream is down", KafkaStreamTag) {
-    EmbeddedKafka.stop()
+  scenario("health responseStatus is Red, when Eventstream is down", taggedConfig) {
+    try {
+      eventStream.destroyBroker
+    } catch {
+      case e: AmazonKinesisException => println(e.getMessage)
+    }
 
     val response: ResultActions = mockMvc.perform(get("/health")).andDo(print())
 
     response.andExpect(status().isOk)
       .andExpect(jsonPath("$.status").value("Red"))
-      .andExpect(jsonPath("$.description").value("Eventstream state error : KeeperErrorCode = ConnectionLoss for /brokers/ids"))
+      .andExpect(jsonPath("$.description").value("Eventstream is down"))
   }
 
-  scenario("validates the incoming payload with the defined schema, and responds with bad request(API-004) on payload validation failure", KafkaStreamTag) {
+  scenario("responds with bad request, http status 400, on payload validation failure", taggedConfig) {
     val json =
       """
                 {
                   "MessageHeader" :{
                      "EventName" : "TestIngestionEvent",
-                     "EventId" : "some-unique-id"
+                     "EventId" : "some-unique-id-for-invalid-request"
                   },
                   "someField2"  : "someValue"
                 }
@@ -202,10 +153,45 @@ class EventIngestionEndpointsIntegrationSpecs extends ComponentSpecs with Spring
     val response: ResultActions = mockMvc.perform(post("/ingest").content(json)).andDo(print())
 
     response.andExpect(status().is(400))
-      .andExpect(jsonPath("$.eventId").value("some-unique-id"))
+      .andExpect(jsonPath("$.eventId").value("some-unique-id-for-invalid-request"))
       .andExpect(jsonPath("$.responseCode").value("VLDN_FAIL"))
   }
 
+  ignore("is able to ingest concurrent requests to the eventstream", taggedConfig) {
+
+    val initialEvents = eventStream.consumeEvent(streamingConfig,
+      ConsumerConfig("testevent_stream_lots_of_events_consumer", partitionId, "TRIM_HORIZON"), StreamName)
+
+    assert(initialEvents.isEmpty)
+
+    println("preparing payload")
+    val requests = Range(0, 10).map(identifier => {
+      s"""
+        {
+          "MessageHeader" :{
+             "EventName" : "TestIngestionEvent",
+             "EventId" : "event-id-${identifier}-concurrent"
+          },
+          "someField1"  : "someValue-${identifier}"
+        }
+      """.stripMargin.replaceAll("\\+s", "")
+    }).toList
+
+    println("/ingesting payload")
+
+    requests.map(json => {
+      mockMvc.perform(post("/ingest").content(json)).andDo(print())
+    }).foreach(response => {
+      println("===========================")
+      response.andExpect(status().is(200))
+    })
+
+    //then
+    val events = eventStream.consumeEvent(streamingConfig,
+      ConsumerConfig("testevent_stream_lots_of_events_consumer_count", partitionId, "earliest"), StreamName)
+
+    assert(events.size == 10)
+  }
 }
 
 //FIXME add controller as bean
